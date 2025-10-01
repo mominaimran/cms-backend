@@ -37,6 +37,7 @@ const protectRoute = async (req, res, next) => {
   }
 };
 
+//RBAC (Role-Based Access Control) middleware.
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {

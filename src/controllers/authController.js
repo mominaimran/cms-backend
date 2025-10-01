@@ -21,12 +21,14 @@ const registerUser = async (req, res, next) => {
     // 🔑 cookie set karo
     generateToken(res, user._id, user.role);
 
-    res.status(201).json({
+    res.status(201).json([
+      {message: "User registered successfully"},
+      {
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-    });
+    }]);
   } catch (error) {
     next(error);
   }
@@ -42,12 +44,14 @@ const loginUser = async (req, res, next) => {
       // 🔑 cookie set karo
       generateToken(res, user._id, user.role);
 
-      res.status(200).json({
+      res.status(200).json([
+        {message: "User logged in successfully"},
+        {
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
-      });
+      }]);
     } else {
       res.status(401);
       throw new Error("Invalid email or password");
