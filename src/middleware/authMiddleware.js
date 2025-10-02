@@ -1,13 +1,14 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
+// ✅ Protect private routes (auth required)
 const protectRoute = async (req, res, next) => {
   try {
-    // 1. cookie se jwt uthao
+    // 1. cookie se JWT uthao
     const token = req.cookies?.jwt;
 
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized - No token" });
+      return res.status(401).json({ message: "Unauthorized - No token provided" });
     }
 
     // 2. token verify karo
@@ -15,34 +16,40 @@ const protectRoute = async (req, res, next) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized - Invalid/Expired token" });
+      return res.status(401).json({
+        message: "Unauthorized - Invalid or expired token",
+      });
     }
 
-    // 3. user dhoondo DB me
+    // 3. DB se user lao (password hide karke)
     const user = await User.findById(decoded.userId).select("-password");
     if (!user) {
       return res.status(401).json({ message: "Unauthorized - User not found" });
     }
 
-    // 4. user ko req me attach kar do
+    // 4. req me user attach
     req.user = user;
 
-    // 5. next middleware/route handler ko bhejo
     next();
   } catch (error) {
-    console.error("Error in protectRoute middleware:", error.message);
+    console.error("❌ protectRoute error:", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-//RBAC (Role-Based Access Control) middleware.
+// ✅ RBAC (Role-Based Access Control)
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Forbidden - Access denied" });
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized - No user context" });
     }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: `Forbidden - ${req.user.role} role is not allowed to access this resource`,
+      });
+    }
+
     next();
   };
 };
