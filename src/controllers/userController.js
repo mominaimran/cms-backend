@@ -1,6 +1,15 @@
 import User from "../models/User.js";
 
-const deleteUser = async (req, res, next) => {
+export const getAllUsers = async (req, res, next) => {
+    try {
+        const users = await User.find().select("-password");
+        res.status(200).json({ success: true, count: users.length, users });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const deleteUser = async (req, res, next) => {
     try {
         const user = await User.findById(req.params.id);
         if (!user) {
@@ -14,4 +23,3 @@ const deleteUser = async (req, res, next) => {
     }
 };
 
-export default deleteUser;
