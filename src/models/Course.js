@@ -24,7 +24,7 @@ const courseSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
-    student: [
+    students: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", //later push student IDs here
