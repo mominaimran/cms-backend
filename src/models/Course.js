@@ -14,23 +14,30 @@ const courseSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    creditHours: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 4,
+    },
     department: {
       type: String,
       required: true,
-      trim: true,
+      enum: [
+        "Computer Science",
+        "Software Engineering",
+        "Electrical Engineering",
+        "Mechanical Engineering",
+        "Business Administration",
+      ],
     },
-    faculty: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
+    semesterNumber: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 8,
     },
-    students: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User", //later push student IDs here
-      },
-    ],
-    semester: {
+    term: {
       type: String,
       enum: ["Spring", "Summer", "Fall"],
       required: true,
@@ -39,6 +46,16 @@ const courseSchema = new mongoose.Schema(
       type: Number,
       default: new Date().getFullYear(),
     },
+    faculty: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // assigned faculty
+    },
+    students: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // enrolled students
+      },
+    ],
   },
   { timestamps: true }
 );

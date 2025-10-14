@@ -89,3 +89,55 @@ export const getAllCourses = async (req, res, next) => {
     next(error);
   }
 };
+
+export const enrollStudent = async (req, res, next) => {
+  try {
+    const { courseId, studentId } = req.body;
+    const course = await Course.findById(courseId);
+    if (!course) {
+      res.status(404);
+      throw new Error("Course not found");
+    }
+    if (course.students.includes(studentId))
+      return res.status(400).json({ message: "Student already enrolled" });
+
+    course.students.push(studentId);
+    await course.save();
+
+    res.status(200).json({ message: "Student enrolled successfully", course });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeStudent = async (req, res, next) => {
+  try {
+    const { courseId, studentId } = req.body;
+
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    course.students = course.students.filter(
+      (id) => id.toString() !== studentId
+    );
+    await course.save();
+
+    res.status(200).json({ message: "Student removed successfully", course });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getEnrolledStudents = async (req, res, next) => {
+  try {
+    const course = await Course.findById(req.params.id).populate(
+      "students",
+      "email role"
+    );
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    res.status(200).json(course.students);
+  } catch (error) {
+    next(error);
+  }
+};

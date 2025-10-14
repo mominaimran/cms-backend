@@ -4,13 +4,13 @@ import { protectRoute, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ✅ Sirf admin register kar sake users
+// ✅ Only admin can register users (students or faculty)
 router.post("/register", protectRoute, authorizeRoles("admin"), registerUser);
 
-// ✅ Login sab ke liye open
+// ✅ Login open for all
 router.post("/login", loginUser);
 
-// ✅ Logout (POST better hai GET se)
+// ✅ Logout
 router.post("/logout", protectRoute, logoutUser);
 
 export default router;
