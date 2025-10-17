@@ -60,3 +60,6 @@ This project demonstrates **enterprise-level backend development skills**:
 ---
 
 💡 *The goal is to gradually evolve this into a **full University Management System backend** while keeping the architecture production-ready and recruiter-friendly.*  
+
+## Author
+Momina Imran
