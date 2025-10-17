@@ -61,5 +61,12 @@ This project demonstrates **enterprise-level backend development skills**:
 
 💡 *The goal is to gradually evolve this into a **full University Management System backend** while keeping the architecture production-ready and recruiter-friendly.*  
 
-## Author
-Momina Imran
+## ✨ Author
+
+**👩‍💻 Momina Imran**  
+*MERN Stack & Backend Developer*  
+
+> “Turning ideas into logic, and logic into code.”  
+
+📍 [GitHub](https://github.com/mominaimran)  
+📫 [LinkedIn](https://www.linkedin.com/in/momina-imran-783b49249/)  
