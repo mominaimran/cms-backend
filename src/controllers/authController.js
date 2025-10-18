@@ -31,29 +31,33 @@ const registerUser = async (req, res, next) => {
 
     // ✅ If the user is a student, parse email info and auto-enroll
     if (role === "student") {
-      const { rollNumber, department, batchTerm, batchYear } = parseEmailInfo(email);
+      const { rollNumber, department, batchTerm, batchYear, semesterNumber } =
+        parseEmailInfo(email);
 
       // Create student profile
       await StudentProfile.create({
         user: user._id,
         rollNumber,
         department,
-        semester: 1,
+        semester: semesterNumber,
         batchTerm,
         batchYear,
       });
 
-      // Find eligible courses (first semester, matching dept & batch)
+      // Determine target year based on batchYear + semesterNumber
+      const targetYear =
+        parseInt(batchYear) + Math.floor((semesterNumber - 1) / 2);
+
       const courses = await Course.find({
         department,
-        semesterNumber: 1,
-        term: batchTerm,
-        year: batchYear,
+        semesterNumber,
+        term: batchTerm, // optional: ya batchTerm rakh sakti ho
+        year: targetYear,
       });
 
       // Enroll student in each
       for (const course of courses) {
-        if (!course.students.includes(user._id)) {
+        if (!course.students.some((id) => id.equals(user._id))) {
           course.students.push(user._id);
           await course.save();
         }
@@ -72,71 +76,6 @@ const registerUser = async (req, res, next) => {
     next(error);
   }
 };
-
-// const registerStudent = async (req, res, next) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     if (!email || !password) {
-//       res.status(400);
-//       throw new Error("Please add all fields");
-//     }
-
-//     const { valid, role } = validateEmailAndRole(email);
-//     if (!valid || role !== "student") {
-//       res.status(403);
-//       throw new Error("Only university emails are allowed for registration");
-//     }
-
-//     const userExists = await User.findOne({ email });
-//     if (userExists) {
-//       res.status(400);
-//       throw new Error("User already exists");
-//     }
-
-//     const user = await User.create({ email, password, role });
-
-//     const { rollNumber, department, batchTerm, batchYear } =
-//       parseEmailInfo(email);
-
-//     await StudentProfile.create({
-//       user: user._id,
-//       rollNumber,
-//       department,
-//       semester: 1,
-//       batchTerm,
-//       batchYear,
-//     });
-
-//     const courses = await Course.find({
-//       department,
-//       semesterNumber: 1,
-//       term: batchTerm,
-//       year: batchYear,
-//     });
-
-//     for (const course of courses) {
-//       course.students.push(user._id);
-//       await course.save();
-//     }
-
-//     // generate login token
-//     generateToken(res, user._id, user.role);
-
-//     res.status(201).json({
-//       message: "Student registered and auto-enrolled successfully",
-//       user: {
-//         _id: user._id,
-//         email: user.email,
-//         role: user.role,
-//         department,
-//         batchYear,
-//       },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
 
 const loginUser = async (req, res, next) => {
   try {
@@ -165,7 +104,8 @@ const loginUser = async (req, res, next) => {
 
       // ✅ Auto-enroll if student not enrolled yet
       if (role === "student") {
-        const { rollNumber, department, batchTerm, batchYear } = parseEmailInfo(email);
+        const { rollNumber, department, batchTerm, batchYear, semesterNumber } =
+          parseEmailInfo(email);
 
         // Check existing profile
         let profile = await StudentProfile.findOne({ user: user._id });
@@ -174,23 +114,28 @@ const loginUser = async (req, res, next) => {
             user: user._id,
             rollNumber,
             department,
-            semester: 1,
+            semester: semesterNumber,
             batchTerm,
             batchYear,
           });
+        } else {
+          // 🧠 Update semester if it changed (auto shift)
+          if (profile.semester !== semesterNumber) {
+            profile.semester = semesterNumber;
+            await profile.save();
+          }
         }
 
-        // Find matching first-semester courses
+        // Enroll in the current semester courses
         const courses = await Course.find({
           department,
-          semesterNumber: 1,
+          semesterNumber,
           term: batchTerm,
-          year: batchYear,
+          year: batchYear + Math.floor((semesterNumber - 1) / 2),
         });
 
-        // Enroll if not already enrolled
         for (const course of courses) {
-          if (!course.students.includes(user._id)) {
+          if (!course.students.some((id) => id.equals(user._id))) {
             course.students.push(user._id);
             await course.save();
           }
@@ -214,7 +159,6 @@ const loginUser = async (req, res, next) => {
     next(error);
   }
 };
-
 
 const logoutUser = (req, res, next) => {
   try {

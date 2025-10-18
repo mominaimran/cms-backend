@@ -1,25 +1,31 @@
 export const parseEmailInfo = (email) => {
   const [prefix] = email.split("@"); // e.g. "005889bscsf24"
 
-  // Extract parts
   const rollNumber = prefix.substring(0, 6);
-  const departmentCode = prefix.substring(6, 10); // e.g. bscs
-  const batch = prefix.substring(10, 13); // e.g. f24
+  const departmentCode = prefix.substring(6, 10);
+  const batch = prefix.substring(10, 13);
 
-  // Department mapping
   const departmentMap = {
     bscs: "Computer Science",
     bsse: "Software Engineering",
-    bsee: "Electrical Engineering",
-    bsme: "Mechanical Engineering",
-    bsba: "Business Administration",
+    bsit: "Information Technology",
   };
-
   const department = departmentMap[departmentCode.toLowerCase()] || "Unknown";
 
-  // Batch details
   const batchTerm = batch.charAt(0).toUpperCase() === "F" ? "Fall" : "Spring";
-  const batchYear = parseInt("20" + batch.slice(1)); // f24 → 2024
+  const batchYear = parseInt("20" + batch.slice(1));
 
-  return { rollNumber, department, batchTerm, batchYear };
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentTerm = now.getMonth() <= 5 ? "Spring" : "Fall";
+
+  // 🧮 Fix semester logic
+  let semesterNumber =
+    (currentYear - batchYear) * 2 +
+    (batchTerm === currentTerm ? 1 : currentTerm === "Spring" ? 2 : 0);
+
+  if (semesterNumber < 1) semesterNumber = 1;
+  if (semesterNumber > 8) semesterNumber = 8;
+
+  return { rollNumber, department, batchTerm, batchYear, semesterNumber };
 };

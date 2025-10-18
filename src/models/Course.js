@@ -26,9 +26,7 @@ const courseSchema = new mongoose.Schema(
       enum: [
         "Computer Science",
         "Software Engineering",
-        "Electrical Engineering",
-        "Mechanical Engineering",
-        "Business Administration",
+        "Information Technology",
       ],
     },
     semesterNumber: {
@@ -49,11 +47,13 @@ const courseSchema = new mongoose.Schema(
     faculty: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // assigned faculty
+      default: null,
     },
     students: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", // enrolled students
+        default: [],
       },
     ],
   },
