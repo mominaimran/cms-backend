@@ -54,6 +54,7 @@ Demonstrates **enterprise-level backend skills**:
 
 ## 🌟 Future Vision
 This project is designed to evolve into a **complete University Management System** with both **MERN** and **Java (Spring Boot)** backend implementations — showing flexibility across tech stacks and real-world scalability.
+
 ---
 
 ## ✨ Author
