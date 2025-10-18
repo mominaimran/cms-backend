@@ -5,7 +5,7 @@ import generateToken from "../utils/generateToken.js";
 import validateEmailAndRole from "../utils/validateEmailAndRole.js";
 import { parseEmailInfo } from "../utils/parseEmailInfo.js";
 
-export const registerUser = async (req, res, next) => {
+const registerUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -73,70 +73,70 @@ export const registerUser = async (req, res, next) => {
   }
 };
 
-const registerStudent = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
+// const registerStudent = async (req, res, next) => {
+//   try {
+//     const { email, password } = req.body;
 
-    if (!email || !password) {
-      res.status(400);
-      throw new Error("Please add all fields");
-    }
+//     if (!email || !password) {
+//       res.status(400);
+//       throw new Error("Please add all fields");
+//     }
 
-    const { valid, role } = validateEmailAndRole(email);
-    if (!valid || role !== "student") {
-      res.status(403);
-      throw new Error("Only university emails are allowed for registration");
-    }
+//     const { valid, role } = validateEmailAndRole(email);
+//     if (!valid || role !== "student") {
+//       res.status(403);
+//       throw new Error("Only university emails are allowed for registration");
+//     }
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      res.status(400);
-      throw new Error("User already exists");
-    }
+//     const userExists = await User.findOne({ email });
+//     if (userExists) {
+//       res.status(400);
+//       throw new Error("User already exists");
+//     }
 
-    const user = await User.create({ email, password, role });
+//     const user = await User.create({ email, password, role });
 
-    const { rollNumber, department, batchTerm, batchYear } =
-      parseEmailInfo(email);
+//     const { rollNumber, department, batchTerm, batchYear } =
+//       parseEmailInfo(email);
 
-    await StudentProfile.create({
-      user: user._id,
-      rollNumber,
-      department,
-      semester: 1,
-      batchTerm,
-      batchYear,
-    });
+//     await StudentProfile.create({
+//       user: user._id,
+//       rollNumber,
+//       department,
+//       semester: 1,
+//       batchTerm,
+//       batchYear,
+//     });
 
-    const courses = await Course.find({
-      department,
-      semesterNumber: 1,
-      term: batchTerm,
-      year: batchYear,
-    });
+//     const courses = await Course.find({
+//       department,
+//       semesterNumber: 1,
+//       term: batchTerm,
+//       year: batchYear,
+//     });
 
-    for (const course of courses) {
-      course.students.push(user._id);
-      await course.save();
-    }
+//     for (const course of courses) {
+//       course.students.push(user._id);
+//       await course.save();
+//     }
 
-    // generate login token
-    generateToken(res, user._id, user.role);
+//     // generate login token
+//     generateToken(res, user._id, user.role);
 
-    res.status(201).json({
-      message: "Student registered and auto-enrolled successfully",
-      user: {
-        _id: user._id,
-        email: user.email,
-        role: user.role,
-        department,
-        batchYear,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+//     res.status(201).json({
+//       message: "Student registered and auto-enrolled successfully",
+//       user: {
+//         _id: user._id,
+//         email: user.email,
+//         role: user.role,
+//         department,
+//         batchYear,
+//       },
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 const loginUser = async (req, res, next) => {
   try {
@@ -160,7 +160,43 @@ const loginUser = async (req, res, next) => {
     }
 
     if (await user.matchPassword(password)) {
+      // ✅ Generate token
       generateToken(res, user._id, user.role);
+
+      // ✅ Auto-enroll if student not enrolled yet
+      if (role === "student") {
+        const { rollNumber, department, batchTerm, batchYear } = parseEmailInfo(email);
+
+        // Check existing profile
+        let profile = await StudentProfile.findOne({ user: user._id });
+        if (!profile) {
+          profile = await StudentProfile.create({
+            user: user._id,
+            rollNumber,
+            department,
+            semester: 1,
+            batchTerm,
+            batchYear,
+          });
+        }
+
+        // Find matching first-semester courses
+        const courses = await Course.find({
+          department,
+          semesterNumber: 1,
+          term: batchTerm,
+          year: batchYear,
+        });
+
+        // Enroll if not already enrolled
+        for (const course of courses) {
+          if (!course.students.includes(user._id)) {
+            course.students.push(user._id);
+            await course.save();
+          }
+        }
+      }
+
       res.status(200).json({
         message: "User logged in successfully",
         user: {
@@ -179,6 +215,7 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+
 const logoutUser = (req, res, next) => {
   try {
     res.cookie("jwt", "", {
@@ -191,4 +228,4 @@ const logoutUser = (req, res, next) => {
   }
 };
 
-export { registerUser, loginUser, logoutUser, registerStudent };
+export { registerUser, loginUser, logoutUser };

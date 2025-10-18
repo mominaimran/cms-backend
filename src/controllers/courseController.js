@@ -3,22 +3,27 @@ import Course from "../models/Course.js";
 
 export const createCourse = async (req, res, next) => {
   try {
-    let { courseCode, courseName, department, semester, year } = req.body;
-    if (!courseCode || !courseName || !department || !semester) {
+    let { courseCode, courseName, creditHours, department, semesterNumber, term, year } = req.body;
+
+    if (!courseCode || !courseName || !creditHours || !department || !semesterNumber || !term || !year) {
       res.status(400);
-      throw new Error("Please add all fields");
+      throw new Error("Please provide all required fields");
     }
+
     const existingCourse = await Course.findOne({ courseCode });
     if (existingCourse) {
       res.status(400);
       throw new Error("Course already exists");
     }
+
     const course = await Course.create({
       courseCode,
       courseName,
+      creditHours,
       department,
-      semester,
-      year,
+      semesterNumber,
+      term,
+      year
     });
     res.status(201).json({ message: "Course created successfully", course });
   } catch (error) {
