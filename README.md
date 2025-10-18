@@ -1,4 +1,4 @@
-# 🎓 University Management Backend (MERN)
+# 🎓 CMS Backend (MERN)
 
 This project is the **backend foundation** for a role-based University Management System.  
 It focuses on **real-world enterprise practices** like authentication, authorization, clean structure, and scalability.
